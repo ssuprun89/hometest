@@ -38,10 +38,13 @@ async def test_get_geolocation_by_ip_not_found(api_client: AsyncClient) -> None:
 
 
 async def test_get_geolocation_by_ip_invalid_format(api_client: AsyncClient) -> None:
-    """FastAPI rejects malformed IPs before they reach the service."""
+    """FastAPI rejects malformed IPs before reaching the service, using our error contract."""
     response = await api_client.get("/api/v1/geolocation/not-an-ip")
 
     assert response.status_code == 422
+    data = response.json()
+    assert data["error"] == "Validation error"
+    assert "detail" in data
 
 
 async def test_get_geolocation_by_ip_provider_timeout(api_client: AsyncClient) -> None:

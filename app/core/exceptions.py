@@ -1,4 +1,5 @@
 from fastapi import Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 
@@ -26,6 +27,24 @@ class GeolocationProviderError(Exception):
 
     def __init__(self, message: str) -> None:
         super().__init__(message)
+
+
+async def validation_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Handle FastAPI RequestValidationError and return HTTP 422 in our error format.
+
+    Overrides FastAPI's default {"detail": [...]} format so all 422 responses
+    across the API use the same {"error": "...", "detail": "..."} contract.
+    """
+    assert isinstance(exc, RequestValidationError)
+    errors = exc.errors()
+    first = errors[0] if errors else {}
+    loc = ".".join(str(part) for part in first.get("loc", []))
+    msg = first.get("msg", "Validation error")
+    detail = f"{loc}: {msg}" if loc else msg
+    return JSONResponse(
+        status_code=422,
+        content={"error": "Validation error", "detail": detail},
+    )
 
 
 async def invalid_ip_handler(request: Request, exc: Exception) -> JSONResponse:

@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 import httpx
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 
 from app.api.v1.routers import geolocation
 from app.core.config import settings
@@ -13,6 +14,7 @@ from app.core.exceptions import (
     invalid_ip_handler,
     not_found_handler,
     provider_error_handler,
+    validation_error_handler,
 )
 
 
@@ -35,6 +37,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_exception_handler(RequestValidationError, validation_error_handler)
 app.add_exception_handler(InvalidIPAddressError, invalid_ip_handler)
 app.add_exception_handler(GeolocationNotFoundError, not_found_handler)
 app.add_exception_handler(GeolocationProviderError, provider_error_handler)
