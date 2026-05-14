@@ -1,0 +1,39 @@
+# IP Geolocation Service — manual HTTP tests
+# Run with: JetBrains HTTP Client or VS Code REST Client
+
+### Look up a known public IP
+GET http://127.0.0.1:8000/api/v1/geolocation/8.8.8.8
+Accept: application/json
+
+###
+
+### Look up another public IP
+GET http://127.0.0.1:8000/api/v1/geolocation/1.1.1.1
+Accept: application/json
+
+###
+
+### Detect geolocation of the requesting client
+GET http://127.0.0.1:8000/api/v1/geolocation/me
+Accept: application/json
+
+###
+
+### Simulate a client behind a proxy using X-Forwarded-For
+GET http://127.0.0.1:8000/api/v1/geolocation/me
+Accept: application/json
+X-Forwarded-For: 8.8.8.8
+
+###
+
+### Invalid IP format — expect HTTP 422
+GET http://127.0.0.1:8000/api/v1/geolocation/not-an-ip
+Accept: application/json
+
+###
+
+### Private IP — expect HTTP 422
+GET http://127.0.0.1:8000/api/v1/geolocation/192.168.1.1
+Accept: application/json
+
+###
