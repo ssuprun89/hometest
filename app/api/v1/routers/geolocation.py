@@ -12,6 +12,7 @@ router = APIRouter(prefix="/geolocation", tags=["Geolocation"])
     "/me",
     response_model=GeolocationResponse,
     responses={
+        404: {"model": ErrorResponse, "description": "Geolocation data not found for detected IP"},
         422: {"model": ErrorResponse, "description": "Client IP is private or reserved"},
         503: {"model": ErrorResponse, "description": "Geolocation provider unavailable"},
     },

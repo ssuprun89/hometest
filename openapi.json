@@ -1,0 +1,265 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "IP Geolocation Service",
+    "description": "A microservice that provides IP address geolocation information.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/geolocation/me": {
+      "get": {
+        "tags": [
+          "Geolocation"
+        ],
+        "summary": "Get geolocation for the requesting client",
+        "description": "Detects the caller's IP address from the request and returns its geolocation data. Resolves the real client IP from `X-Forwarded-For` or `X-Real-IP` headers when behind a proxy.",
+        "operationId": "getCurrentClientGeo",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeolocationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Geolocation data not found for the detected IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Client IP is private or reserved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Geolocation provider unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/geolocation/{ip}": {
+      "get": {
+        "tags": [
+          "Geolocation"
+        ],
+        "summary": "Get geolocation for a specific IP address",
+        "description": "Returns geolocation data for the given IPv4 address.",
+        "operationId": "getGeoByIp",
+        "parameters": [
+          {
+            "name": "ip",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "ipvanyaddress",
+              "title": "Ip"
+            },
+            "description": "IPv4 address to look up"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeolocationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Geolocation data not found for the given IP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid IP address format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Geolocation provider unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ErrorResponse": {
+        "properties": {
+          "error": {
+            "type": "string",
+            "title": "Error"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "ErrorResponse",
+        "description": "Consistent error response returned for all API error cases.",
+        "examples": [
+          {
+            "detail": "192.168.1.999 is not a valid IP address",
+            "error": "Invalid IP address"
+          }
+        ]
+      },
+      "GeolocationResponse": {
+        "properties": {
+          "ip": {
+            "type": "string",
+            "title": "Ip",
+            "description": "The queried IP address",
+            "examples": [
+              "8.8.8.8"
+            ]
+          },
+          "country": {
+            "type": "string",
+            "title": "Country",
+            "description": "Full country name",
+            "examples": [
+              "United States"
+            ]
+          },
+          "country_code": {
+            "type": "string",
+            "title": "Country Code",
+            "description": "ISO 3166-1 alpha-2 country code",
+            "examples": [
+              "US"
+            ]
+          },
+          "region": {
+            "type": "string",
+            "title": "Region",
+            "description": "Region or state name",
+            "examples": [
+              "Virginia"
+            ]
+          },
+          "city": {
+            "type": "string",
+            "title": "City",
+            "description": "City name",
+            "examples": [
+              "Ashburn"
+            ]
+          },
+          "latitude": {
+            "type": "number",
+            "title": "Latitude",
+            "description": "Latitude coordinate",
+            "examples": [
+              39.03
+            ]
+          },
+          "longitude": {
+            "type": "number",
+            "title": "Longitude",
+            "description": "Longitude coordinate",
+            "examples": [
+              -77.5
+            ]
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone",
+            "description": "IANA timezone identifier",
+            "examples": [
+              "America/New_York"
+            ]
+          },
+          "isp": {
+            "type": "string",
+            "title": "Isp",
+            "description": "Internet Service Provider name",
+            "examples": [
+              "Google LLC"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "ip",
+          "country",
+          "country_code",
+          "region",
+          "city",
+          "latitude",
+          "longitude",
+          "timezone",
+          "isp"
+        ],
+        "title": "GeolocationResponse",
+        "description": "Geolocation data returned for a resolved IP address.",
+        "examples": [
+          {
+            "city": "Ashburn",
+            "country": "United States",
+            "country_code": "US",
+            "ip": "8.8.8.8",
+            "isp": "Google LLC",
+            "latitude": 39.03,
+            "longitude": -77.5,
+            "region": "Virginia",
+            "timezone": "America/New_York"
+          }
+        ]
+      }
+    }
+  }
+}

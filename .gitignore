@@ -57,7 +57,6 @@ cover/
 *.mo
 *.pot
 *.csv
-*.json
 
 
 # Django stuff:

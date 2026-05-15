@@ -2,9 +2,11 @@ import httpx
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from app.clients.ip_api import IPApiClient
 from app.core.config import settings
 from app.main import app
 from app.models.geolocation import GeolocationResponse
+from app.services.geolocation import GeolocationService
 
 MOCK_IP = "8.8.8.8"
 
@@ -43,9 +45,10 @@ async def api_client() -> AsyncClient:
     """Async test client wired to the FastAPI app via ASGI transport.
 
     ASGITransport does not trigger the app lifespan, so we manually create
-    and inject the HTTP client that the app depends on via app.state.
+    and inject the shared resources that the app depends on via app.state.
     """
     async with httpx.AsyncClient(timeout=settings.ip_api_timeout) as http_client:
         app.state.http_client = http_client
+        app.state.geolocation_service = GeolocationService(IPApiClient(http_client))
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             yield client  # type: ignore[misc]

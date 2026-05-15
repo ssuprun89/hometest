@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 
 from app.api.v1.routers import geolocation
+from app.clients.ip_api import IPApiClient
 from app.core.config import settings
 from app.core.exceptions import (
     GeolocationNotFoundError,
@@ -16,18 +17,17 @@ from app.core.exceptions import (
     provider_error_handler,
     validation_error_handler,
 )
+from app.services.geolocation import GeolocationService
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
-    """Manage the lifecycle of the shared HTTP client.
-
-    A single AsyncClient is created at startup and closed at shutdown,
-    allowing connection pooling across all requests.
-    """
-    app.state.http_client = httpx.AsyncClient(timeout=settings.ip_api_timeout)
+    """Create shared resources once at startup and release them at shutdown."""
+    http_client = httpx.AsyncClient(timeout=settings.ip_api_timeout)
+    app.state.http_client = http_client
+    app.state.geolocation_service = GeolocationService(IPApiClient(http_client))
     yield
-    await app.state.http_client.aclose()
+    await http_client.aclose()
 
 
 app = FastAPI(
